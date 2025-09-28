@@ -57,6 +57,10 @@ body {
   background: white;
   box-shadow: 0 0 20px rgb(0, 0, 0, 0.1);
 }
+.slide.build {
+  align-items: center;
+  justify-content: center;
+}
 .left-side {
   position: relative;
   display: flex;
@@ -247,6 +251,7 @@ body {
 }
 .start-btn.disabled {
   background: linear-gradient(135deg, #bababa, #9b9b9b);
+  cursor: default;
 }
 .start-btn:not(.disabled):hover {
   transform: translateY(-2px);
@@ -540,6 +545,10 @@ body {
   font-weight: bold;
   cursor: pointer;
 }
+.build-btn.disabled {
+  background: var(--inactive-color);
+  cursor: default;
+}
 .pitch-view-select {
   padding: 4px 12px;
 }
@@ -571,11 +580,14 @@ body {
 .build-message-display {
   font-weight: bold;
   color: var(--inactive-color);
+  margin-top: 10px;
+  height: 21px;
 }
 .build-progress-bar {
-  width: 900px;
+  width: 100%;
   height: 30px;
   border: 1px solid var(--border-color);
+  margin-top: 10px;
 }
 .build-progress-gauge {
   height: 100%;
@@ -716,4 +728,17 @@ body {
   display: flex;
   gap: 5px;
   color: var(--text-color);
+}
+.file-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.file-list > * {
+  display: flex;
+  gap: 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--inactive-color);
+  border-radius: 5px;
 }

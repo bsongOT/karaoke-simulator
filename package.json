@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "chmod +x /usr/local/bin/yt-dlp && next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "setup": "pip install yt-dlp && npm install"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

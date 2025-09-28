@@ -77,9 +77,10 @@ export function Screen(props:ScreenProps) {
             const syncArr = syncData.map(_ => _).flat(1);
             for (let i = 0; i < syncArr.length; i++){
                 if (syncArr[i].start < 0) continue;
+                const pitchY = frequencyToNoteName(syncArr[i].pitch).noteNumber;
                 cx.roundRect(
                     400 + (syncArr[i].start - time) * barSpeed,
-                    118 - 8 * frequencyToNoteName(syncArr[i].pitch).noteNumber,
+                    118 - 8 * (isFinite(pitchY) ? pitchY : 0),
                     ((syncArr[i].end > 0 ? syncArr[i].end : time) - syncArr[i].start) * barSpeed,
                     5, 5
                 );
@@ -146,9 +147,10 @@ export function Screen(props:ScreenProps) {
         const syncArr = syncData.map(_ => _).flat(1);
         for (let i = 0; i < syncArr.length; i++){
             if (syncArr[i].start < 0) continue;
+            const pitchY = frequencyToNoteName(syncArr[i].pitch).noteNumber;
             cx.roundRect(
                 400 + (syncArr[i].start - time) * barSpeed,
-                118 - 8 * frequencyToNoteName(syncArr[i].pitch).noteNumber,
+                118 - 8 * (isFinite(pitchY) ? pitchY : 0),
                 ((syncArr[i].end > 0 ? syncArr[i].end : time) - syncArr[i].start) * barSpeed,
                 5, 5
             );
@@ -160,9 +162,10 @@ export function Screen(props:ScreenProps) {
         cx.beginPath();
         cx.fillStyle = "gold";
         for (let i = 0; i < syncArr.length; i++){
+            const pitchY = frequencyToNoteName(syncArr[i].pitch).noteNumber;
             cx.roundRect(
                 400 + (syncArr[i].start - time) * barSpeed,
-                118 - 8 * frequencyToNoteName(syncArr[i].pitch).noteNumber,
+                118 - 8 * (isFinite(pitchY) ? pitchY : 0),
                 Math.max(Math.min(syncArr[i].end, time) - syncArr[i].start, 0) * barSpeed,
                 5, 5
             );
@@ -214,7 +217,7 @@ export function Screen(props:ScreenProps) {
 
         ready();
 
-        props.exportDraw?.(() => draw);
+        props.exportDraw?.(draw);
         props.exportCanvas?.(screen.current as HTMLCanvasElement);
 
         const loop = setInterval(() => {
@@ -235,7 +238,7 @@ export function Screen(props:ScreenProps) {
     return (
         <div className="screen">
             <canvas ref={screen} width={800} height={450}></canvas>
-            <PlayerController audio={props.audio}/>
+            {props.isRunningMode && <PlayerController audio={props.audio}/>}
         </div>
     )
 }

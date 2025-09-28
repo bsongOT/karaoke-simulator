@@ -36,6 +36,21 @@ export default function FileDropzone({
         }
     };
 
+    if (files.length > 0){
+        return (
+            <ul className="file-list">
+                {files.map((file, idx) => (
+                    <li key={idx}>
+                        <button onClick={() => {
+                            setFiles([...files.filter((_, i) => i !== idx)])
+                        }}>×</button>
+                        <span>{file.name}</span>
+                    </li>
+                ))}
+            </ul>
+        )
+    }
+
     return (
         <div
             className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
@@ -65,13 +80,6 @@ export default function FileDropzone({
                 multiple={multiple}
                 {...rest}
             />
-            {files.length > 0 && (
-                <ul className="text-sm text-gray-700 list-disc list-inside">
-                    {files.map((file, idx) => (
-                        <li key={idx}>{file.name}</li>
-                    ))}
-                </ul>
-            )}
         </div>
     );
 }

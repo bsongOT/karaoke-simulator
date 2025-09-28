@@ -2,14 +2,17 @@ import { Screen } from "@/app/components/Screen"
 import { AudioManager } from "@/AudioManager"
 import { Article } from "@/data-struct/Article"
 import { SyncInfo } from "@/SyncInfo"
-import { useRef } from "react"
+import { useEffect, useRef } from "react"
 
 type BuildSlideProps = {
     message:string,
     progress:number,
     syncData:Article<SyncInfo>,
     video?:HTMLVideoElement,
-    audio:AudioManager|null
+    audio:AudioManager|null,
+    setCanvas:(canvas:HTMLCanvasElement)=>void,
+    setDraw:(draw:(time:number)=>void)=>void,
+    startsBuild:boolean
 }
 export function BuildSlide(props:BuildSlideProps){
     return (
@@ -21,6 +24,8 @@ export function BuildSlide(props:BuildSlideProps){
                     video={useRef(props.video ?? null)} 
                     existsVideo={false} 
                     syncData={props.syncData}
+                    exportCanvas={props.setCanvas}
+                    exportDraw={props.setDraw}
                 />
                 <div className="build-message-display">{props.message}</div>
                 <div className="build-progress-bar">

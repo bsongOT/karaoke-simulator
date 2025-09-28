@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LyricView } from "./components/LyricVIew";
 import { Screen } from "./components/Screen";
 import { Article } from "../data-struct/Article";
@@ -40,8 +40,8 @@ export default function Home() {
   const [syncData, setSyncData] = useState(new Article<SyncInfo>([[new SyncInfo(" ", -1, -1)]]))
   const [currentIndex, setCurrentIndex] = useState([0, 0] as [number, number]);
   const [isRunningMode, setIsRunningMode] = useState(true);
-  const [canvas, setCanvas] = useState<HTMLCanvasElement>();
-  const [draw, setDraw] = useState<(time:number)=>void>(()=>()=>{});
+  const canvasForBuildRef = useRef<HTMLCanvasElement>(null);
+  const drawForBuildRef = useRef<(time:number)=>void>(null);
   const audio = useRef<AudioManager>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [buildMessage, setBuildMessage] = useState("");
@@ -143,7 +143,6 @@ export default function Home() {
     if (!vocal || !mr) return;
 
     const vocalSrc = URL.createObjectURL(vocal);
-    const mrSrc = URL.createObjectURL(mr);
 
     pd.vocal = vocal;
     pd.vocalSrc = vocalSrc;
@@ -156,17 +155,25 @@ export default function Home() {
     setProduct({ ...pd });
     setMrStatus("ready");
   }
-
+  const getBuildReady = () => {
+    if (mrStatus !== "ready") return false;
+    if (musicFileStatus !== "ready") return false;
+    if (melodyStatus !== "ready") return false;
+    if (!product.mr || !product.music || product.name === "" ||
+        !syncData.map(_ => _).flat().every(si => si.start > 0 && si.end > 0)) return false;
+    return true;
+  }
   const build = async () => {
+    if (!getBuildReady()) return;    
     setIsRunningMode(false);
     product.dataJson = await getSyncDataBlob(syncData);
     setSlide(Slide.Build);
-    const result = await convert(product, canvas!, draw!, audio.current?.duration ?? 0, 
+    console.log(canvasForBuildRef.current, drawForBuildRef.current);
+    const result = await convert(product, canvasForBuildRef.current!, drawForBuildRef.current!, audio.current?.duration ?? 0, 
     {
       onProgress: progress => {
         setBuildMessage(progress.message);
         setBuildProgress(progress.percent);
-        console.log(`${progress.message} [${Math.floor(progress.percent * 1000) / 10}%]`)
       }
     });
     const zip = new JSZip();
@@ -238,7 +245,7 @@ export default function Home() {
               </li>
             </ul>
           </div>
-          <button className="build-btn" onClick={build}>빌드 시작</button>
+          <button className={"build-btn" + (getBuildReady() ? "" : " disabled")} onClick={build}>빌드 시작</button>
         </div>
         <main className="main-view">
           <Screen 
@@ -247,8 +254,6 @@ export default function Home() {
             video={videoRef}
             existsVideo={product.music?.type.startsWith("video/") ?? false}
             syncData={syncData}
-            exportCanvas={setCanvas}
-            exportDraw={setDraw}
           />
           <video muted style={{display: "none"}} ref={videoRef} src={product.src} controls></video>
           <div className="keyboard-box">
@@ -289,7 +294,15 @@ export default function Home() {
           />
         </aside>
       </div>
-      <BuildSlide message={buildMessage} progress={buildProgress} syncData={syncData} audio={audio.current}/>
+      <BuildSlide 
+        message={buildMessage} 
+        progress={buildProgress} 
+        syncData={syncData} 
+        audio={audio.current} 
+        setCanvas={cv => canvasForBuildRef.current = cv} 
+        setDraw={dr => drawForBuildRef.current = dr} 
+        startsBuild={!isRunningMode}
+      />
       {isLyricSearcherOpened && <LyricSearcher setSyncData={setSyncData} closeLyricSearcher={()=>setIsLyricSearcherOpened(false)}/>}
     </div>
   );

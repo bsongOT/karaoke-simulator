@@ -48,6 +48,8 @@ class AudioInfo {
         return Math.min(this.duration, this.__rateChangedAudioTime + this.playbackRate * (this.audioContext.currentTime - this.__rateChangedTime));
     }
     public set currentTime(v){
+        if (v < 0) return;
+        if (v > this.duration) return;
         this.__rateChangedTime = this.audioContext.currentTime;
         this.__rateChangedAudioTime = v;
         if (this.paused){
