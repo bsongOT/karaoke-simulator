@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 export function LyricView(props:{syncData:Article<SyncInfo>, rerenderSync:()=>void, currentIndex:[number, number], setCurrentIndex:(idx:[number, number])=>void}){
     return (
         <ul className="lyric-view">
-            {...props.syncData.map((_, i) => <Line syncData={props.syncData} index={i} currentIndex={props.currentIndex} rerenderSync={props.rerenderSync} setCurrentIndex={props.setCurrentIndex}/>)}
+            {...props.syncData.map((_, i) => <Line key={i} syncData={props.syncData} index={i} currentIndex={props.currentIndex} rerenderSync={props.rerenderSync} setCurrentIndex={props.setCurrentIndex}/>)}
         </ul>
     );
 }
@@ -61,6 +61,7 @@ function Line(props:{syncData:Article<SyncInfo>, index:number, currentIndex:[num
                 {...props.syncData.lineAt(props.index).map(
                     (n, i) => (
                         <Letter 
+                            key={i}
                             letter={n}
                             isCurrent={props.currentIndex[0] === props.index && props.currentIndex[1] === i}
                             index={[props.index, i]}

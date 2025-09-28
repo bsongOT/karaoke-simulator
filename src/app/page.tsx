@@ -289,7 +289,7 @@ export default function Home() {
           />
         </aside>
       </div>
-      <BuildSlide message={buildMessage} progress={buildProgress} syncData={syncData}/>
+      <BuildSlide message={buildMessage} progress={buildProgress} syncData={syncData} audio={audio.current}/>
       {isLyricSearcherOpened && <LyricSearcher setSyncData={setSyncData} closeLyricSearcher={()=>setIsLyricSearcherOpened(false)}/>}
     </div>
   );

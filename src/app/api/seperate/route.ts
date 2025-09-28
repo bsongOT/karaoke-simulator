@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req:NextRequest, res:Response){
+export async function POST(req:NextRequest){
     try {
         const url = "https://spleeter-aea3mfyqpq-du.a.run.app/seperate";
         const form = await req.formData();
@@ -11,7 +11,7 @@ export async function POST(req:NextRequest, res:Response){
 
         return NextResponse.json(await result.json())
     }
-    catch (e:any){
-        return NextResponse.json({token: "-", error: e.message})
+    catch (e:unknown){
+        return NextResponse.json({token: "-", error: (e as {message:string}).message})
     }
 }

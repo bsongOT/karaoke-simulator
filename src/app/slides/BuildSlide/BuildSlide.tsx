@@ -1,4 +1,5 @@
 import { Screen } from "@/app/components/Screen"
+import { AudioManager } from "@/AudioManager"
 import { Article } from "@/data-struct/Article"
 import { SyncInfo } from "@/SyncInfo"
 import { useRef } from "react"
@@ -7,7 +8,8 @@ type BuildSlideProps = {
     message:string,
     progress:number,
     syncData:Article<SyncInfo>,
-    video?:HTMLVideoElement
+    video?:HTMLVideoElement,
+    audio:AudioManager|null
 }
 export function BuildSlide(props:BuildSlideProps){
     return (
@@ -15,7 +17,7 @@ export function BuildSlide(props:BuildSlideProps){
             <div className="build-container">
                 <Screen
                     isRunningMode={false}
-                    audio={useRef(null)} 
+                    audio={props.audio} 
                     video={useRef(props.video ?? null)} 
                     existsVideo={false} 
                     syncData={props.syncData}

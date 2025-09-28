@@ -1,7 +1,7 @@
 import { spawn } from "child_process";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req:NextRequest, res:NextResponse){
+export async function POST(req:NextRequest){
     try {
         return await new Promise<NextResponse>(async resolve => {
             const url = (await req.formData()).get("url") as string;
@@ -27,7 +27,7 @@ export async function POST(req:NextRequest, res:NextResponse){
             })
         });
     }
-    catch (e:any){
-        return NextResponse.json({error: e.message});
+    catch (e:unknown){
+        return NextResponse.json({error: (e as {message:string}).message});
     }
 }

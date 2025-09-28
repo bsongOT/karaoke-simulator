@@ -15,7 +15,7 @@ export function syllabify(words:string) {
 
 export function toSylls(sentence:string){
     const words = sentence.split(" ");
-    let syllables = [];
+    const syllables = [];
 
     for (let i = 0; i < words?.length; i++){
         const english = /^[A-Za-z]*$/;

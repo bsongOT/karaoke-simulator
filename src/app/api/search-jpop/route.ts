@@ -44,9 +44,9 @@ export async function POST(req: NextRequest) {
       .flat()
       .join("\n");
     return NextResponse.json({ lyric });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message },
+      { error: (error as {message:string}).message },
       { status: 500 }
     );
   }

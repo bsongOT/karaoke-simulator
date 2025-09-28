@@ -222,8 +222,8 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
             }></path>
             <g>
             {
-                ...props.syncData.map(_ => _).flat().map(sd => {
-                if (!props.audio) return <path></path>;
+                ...props.syncData.map(_ => _).flat().map((sd, i) => {
+                if (!props.audio) return <path key={i}></path>;
                 const startX = Math.round(390 + (sd.start - props.audio.currentTime) * 195);
                 const endX = Math.round(390 + (sd.end - props.audio.currentTime) * 195);
                 const pitchInfo = frequencyToNoteName(sd.pitch);
@@ -263,8 +263,8 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
             }></path>
             <g>
             {
-                ...props.syncData.map(_ => _).flat().map(sd => {
-                if (!props.audio) return <path></path>;
+                ...props.syncData.map(_ => _).flat().map((sd, i) => {
+                if (!props.audio) return <path key={i}></path>;
                 const startX = Math.round(390 + (sd.start - props.audio.currentTime) * 195);
                 const endX = Math.round(390 + (sd.end - props.audio.currentTime) * 195);
                 const range = mikeTotalPitches.slice(Math.floor(sd.start * 40), Math.floor(sd.end * 40)).filter(v => !isNaN(v) && v > 1 && v < 440 * 16).sort();
@@ -273,6 +273,7 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
                 const color = ["purple", "blue", "skyblue", "green", "yellow", "orange", "red"][frequencyToNoteName(pitch > 0 ? pitch : C2).octave - 1] ?? "black";
                 return (
                 <path
+                    key={i}
                     fill="none" stroke={color} strokeWidth="4px"
                     d={`M${startX} ${y} L${endX} ${y}`}
                 />)

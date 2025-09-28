@@ -48,7 +48,7 @@ function splitSentence(sentence:string){
 	let splitWidth = 0;
     let beforeSplitIndex = -1;
 	let splitIndex = 0;
-    let sentences = [];
+    const sentences = [];
 	const totalWidth = getSentenceWidth(sentence);
 	const averageWidth = totalWidth / Math.ceil(totalWidth / 14);
 

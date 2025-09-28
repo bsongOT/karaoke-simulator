@@ -36,7 +36,7 @@ export function LyricSearcher(props:{setSyncData:(sd:Article<SyncInfo>)=>void, c
                 </div>
             </div>
             <div className="lyric-container">
-                {...lyricLines.map(l => <div>{l}</div>)}
+                {...lyricLines.map((l, i) => <div key={i}>{l}</div>)}
             </div>
             <button onClick={() => {
                 props.setSyncData(

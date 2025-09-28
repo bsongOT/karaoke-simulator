@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req:NextRequest, res:NextResponse){
+export async function POST(req:NextRequest){
     try {
         const url = "https://spleeter-aea3mfyqpq-du.a.run.app/fetch-result";
         const reqForm = await req.formData();
@@ -19,7 +19,7 @@ export async function POST(req:NextRequest, res:NextResponse){
 
         return new NextResponse(buffer);
     }
-    catch (e:any){
-        return NextResponse.json({error: e.message});
+    catch (e:unknown){
+        return NextResponse.json({error: (e as {message:string}).message});
     }
 }
