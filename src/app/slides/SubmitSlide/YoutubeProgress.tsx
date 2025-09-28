@@ -67,6 +67,7 @@ export function YoutubeProgress(props:YoutubeProgressProps){
           const blob = await res.blob();
 
           product.music = blob;
+          product.src = URL.createObjectURL(blob);
           window.addEventListener("beforeunload", e => {
             e.preventDefault();
           })
