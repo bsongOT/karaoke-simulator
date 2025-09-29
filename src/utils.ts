@@ -41,7 +41,7 @@ export function lineSentence(line:string[], to:number = -1){
 }
 
 export function toNotes(sentence:string){
-    const sign = [".", ",", "!", "?"];
+    const sign = [".", ",", "!", "?", "？", "。", "「", "」"];
     const refinedSentence = sentence.split("").filter(v => !sign.includes(v)).join("");
     
     return toSylls(refinedSentence)

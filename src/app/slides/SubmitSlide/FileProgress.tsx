@@ -14,7 +14,10 @@ export function FileProgress(props: FileProgressProps) {
 
     const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file) return;
+        if (!file) {
+            setReady(false);
+            return;
+        }
         fileRef.current = file;
 
         setReady(true);

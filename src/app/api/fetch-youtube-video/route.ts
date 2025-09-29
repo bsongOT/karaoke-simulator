@@ -5,7 +5,7 @@ export async function POST(req:NextRequest){
     try {
         return await new Promise<NextResponse>(async resolve => {
             const url = (await req.formData()).get("url") as string;
-            const ytdl = spawn("./node_modules/youtube-dl-exec/bin/yt-dlp", ["-f", "best", "-o", "-", url]);
+            const ytdl = spawn("./node_modules/youtube-dl-exec/bin/yt-dlp", ["-f", "best", "-o", "-", url, "--no-warnings"]);
             const chunks: Buffer[] = [];
 
             ytdl.stdout.on("data", (chunk) => chunks.push(chunk));
@@ -22,7 +22,7 @@ export async function POST(req:NextRequest){
                     }));
                 } 
                 else {
-                    resolve(NextResponse.json({error: "execution fail"}));
+                    resolve(NextResponse.json({error: "execution fail with code " + code}));
                 }
             })
         });
