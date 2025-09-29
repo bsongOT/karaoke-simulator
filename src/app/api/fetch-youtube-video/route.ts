@@ -7,9 +7,14 @@ export async function POST(req:NextRequest){
             const url = (await req.formData()).get("url") as string;
             const ytdl = spawn("./node_modules/youtube-dl-exec/bin/yt-dlp", ["-f", "best", "-o", "-", url, "--no-warnings"]);
             const chunks: Buffer[] = [];
+            const errChunks: Buffer[] = [];
 
+            console.log(url);
             ytdl.stdout.on("data", (chunk) => chunks.push(chunk));
-            ytdl.stderr.on("data", console.log);
+            ytdl.stderr.on("data", (chunk) => {
+                errChunks.push(chunk);
+                console.log(chunk.toString());
+            });
 
             ytdl.on("close", (code) => {
                 if (code === 0) {
