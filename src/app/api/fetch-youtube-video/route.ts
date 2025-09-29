@@ -5,7 +5,13 @@ export async function POST(req:NextRequest){
     try {
         return await new Promise<NextResponse>(async resolve => {
             const url = (await req.formData()).get("url") as string;
-            const ytdl = spawn("./node_modules/youtube-dl-exec/bin/yt-dlp", ["-f", "best", "-o", "-", url, "--no-warnings"]);
+            const ytdl = spawn("./node_modules/youtube-dl-exec/bin/yt-dlp", [
+                "-f", "best", 
+                "-o", "-", url, 
+                "--no-warnings", 
+                "--user-agent", 
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+            ]);
             const chunks: Buffer[] = [];
             const errChunks: Buffer[] = [];
 
