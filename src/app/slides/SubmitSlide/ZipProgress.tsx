@@ -33,7 +33,6 @@ export function ZipProgress(props:ZipProgressProps){
     if (!music || !mr || !json) return;
 
     const musicSrc = URL.createObjectURL(music);
-    const mrSrc = URL.createObjectURL(mr);
 
     const product = {
       name: zipFile.name.slice(0, zipFile.name.lastIndexOf(".")),
@@ -41,9 +40,7 @@ export function ZipProgress(props:ZipProgressProps){
       music: music,
       src: musicSrc,
       mr: mr,
-      mrSrc: mrSrc,
       vocal: undefined,
-      vocalSrc: "",
       karaokeVideo: undefined,
       singAlongVideo: undefined,
       dataJson: json

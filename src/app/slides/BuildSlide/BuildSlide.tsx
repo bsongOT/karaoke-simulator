@@ -8,7 +8,7 @@ type BuildSlideProps = {
     message:string,
     progress:number,
     syncData:Article<SyncInfo>,
-    video?:HTMLVideoElement,
+    video:HTMLVideoElement|null,
     audio:AudioManager|null,
     setCanvas:(canvas:HTMLCanvasElement)=>void,
     setDraw:(draw:(time:number)=>void)=>void,
@@ -22,7 +22,7 @@ export function BuildSlide(props:BuildSlideProps){
                     isRunningMode={false}
                     audio={props.audio} 
                     video={useRef(props.video ?? null)} 
-                    existsVideo={false} 
+                    existsVideo={true} 
                     syncData={props.syncData}
                     exportCanvas={props.setCanvas}
                     exportDraw={props.setDraw}

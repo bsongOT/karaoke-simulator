@@ -1,12 +1,12 @@
 import { AudioManager } from "@/AudioManager";
 import { useRef, useState } from "react";
 
-export function VolumeController(props:{audio:AudioManager | null, mrStatus:"ready" | "pending" | "error"}) {
-    const {audio, mrStatus} = props;
+export function VolumeController(props:{audio:AudioManager | null, mrStatus:"ready" | "pending" | "error", melodyStatus:"ready" | "pending"}) {
+    const {audio, mrStatus, melodyStatus} = props;
 
     return (
         <div>
-            {mrStatus !== "ready" ? 
+            {mrStatus !== "ready" ?
                 <VolumeSlider 
                     title="볼륨" 
                     value={audio?.volume[0] ?? 0} 
@@ -19,9 +19,17 @@ export function VolumeController(props:{audio:AudioManager | null, mrStatus:"rea
                 />
                 <VolumeSlider
                     title="보컬 볼륨"
-                    value={audio?.volume[1] ?? 0} 
+                    value={audio?.volume[2] ?? 0} 
                     setValue={v => audio?.setVolume(2, v)}
-                /></>
+                />
+                {melodyStatus === "ready" &&
+                <VolumeSlider
+                    title="멜로디 볼륨"
+                    value={audio?.volume[3] ?? 0} 
+                    setValue={v => audio?.setVolume(3, v)}
+                />
+                }
+                </>
             }
         </div>
     )

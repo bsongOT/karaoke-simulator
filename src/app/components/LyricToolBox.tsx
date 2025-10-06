@@ -1,6 +1,6 @@
 import { Article } from "@/data-struct/Article";
 import { SyncInfo } from "@/SyncInfo";
-import { download, getSyncDataBlob, toNotes } from "@/utils";
+import { download, generateMelodies, getSyncDataBlob, toNotes } from "@/utils";
 import { useRef } from "react";
 
 export function LyricToolBox(props:{syncData:Article<SyncInfo>, setSyncData:(syncData:Article<SyncInfo>)=>void, setCurrentIndex: (index:[number, number]) => void, openSearcher:()=>void}){

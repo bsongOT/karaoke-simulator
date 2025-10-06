@@ -42,10 +42,11 @@ export default function FileDropzone({
                 {files.map((file, idx) => (
                     <li key={idx}>
                         <button onClick={(e:React.MouseEvent<HTMLButtonElement>) => {
-                            setFiles([...files.filter((_, i) => i !== idx)]);
+                            const newFiles = [...files.filter((_, i) => i !== idx)];
+                            setFiles(newFiles);
                             onChange?.({
                                 ...e,
-                                target: { files: files }
+                                target: { files: newFiles }
                             } as unknown as React.ChangeEvent<HTMLInputElement>)
                         }}>×</button>
                         <span>{file.name}</span>

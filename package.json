@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@breezystack/lamejs": "^1.2.7",
+    "@distube/ytdl-core": "^4.16.12",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@ffmpeg/ffmpeg": "^0.12.15",
@@ -31,7 +33,8 @@
     "react-icons": "^5.5.0",
     "react-spinners": "^0.17.0",
     "tailwind-merge": "^3.3.1",
-    "wanakana": "^5.3.1"
+    "wanakana": "^5.3.1",
+    "ytdl-core": "npm:@distube/ytdl-core@^4.16.12"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

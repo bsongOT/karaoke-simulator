@@ -9,7 +9,7 @@ self.onmessage = (e:MessageEvent<{ frameSize:number, sampleRate:number, audioBuf
     const detectPitchACF2PLUS = PitchFinder.ACF2PLUS({ sampleRate });
     const detectPitchDynamic = PitchFinder.DynamicWavelet({ sampleRate });
     const pitchDetector = PitchDetector.forFloat32Array(frameSize);
-    const pitchFrames = [] as {freq:number}[];
+    const pitchFrames = [] as {freq:number|null}[];
     const arr = new Float32Array(audioBuffer);
 
     for (let i = 0; i < arr.length; i += frameSize){
@@ -36,7 +36,7 @@ self.onmessage = (e:MessageEvent<{ frameSize:number, sampleRate:number, audioBuf
             pitchFrames.push({freq: pitch4});
             continue;
         }
-        pitchFrames.push({freq: C2});
+        pitchFrames.push({freq: null});
     }
     self.postMessage({ frames: pitchFrames, start: start });
 }

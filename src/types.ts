@@ -1,10 +1,11 @@
+import { useResultOption } from "./custom-hooks"
+
 export type Product = {
   name: string,
   music: Blob | undefined,
   src: string | undefined,
   mr: Blob | undefined,
   vocal: Blob | undefined,
-  vocalSrc: string,
   karaokeVideo: Blob | undefined,
   singAlongVideo: Blob | undefined,
   dataJson: Blob | undefined
@@ -22,3 +23,4 @@ export enum Shortcut {
   A,
   S
 }
+export type ResultOption = ReturnType<typeof useResultOption>;

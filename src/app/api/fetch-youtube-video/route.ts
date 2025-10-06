@@ -6,21 +6,14 @@ export async function POST(req:NextRequest){
         return await new Promise<NextResponse>(async resolve => {
             const url = (await req.formData()).get("url") as string;
             const ytdl = spawn("./node_modules/youtube-dl-exec/bin/yt-dlp", [
-                "-f", "best", 
+                "-f", "best[filesize_approx<15M]", 
                 "-o", "-", url, 
-                "--no-warnings", 
-                "--cookies-from-browser",
-                "chrome"
+                "--no-warnings"
             ]);
             const chunks: Buffer[] = [];
-            const errChunks: Buffer[] = [];
 
-            console.log(url);
             ytdl.stdout.on("data", (chunk) => chunks.push(chunk));
-            ytdl.stderr.on("data", (chunk) => {
-                errChunks.push(chunk);
-                console.log(chunk.toString());
-            });
+            ytdl.stderr.on("data", (chunk) => console.log(chunk.toString()));
 
             ytdl.on("close", (code) => {
                 if (code === 0) {

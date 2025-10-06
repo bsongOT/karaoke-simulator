@@ -18,7 +18,7 @@ export function Screen(props:ScreenProps) {
     const cxRef = useRef<CanvasRenderingContext2D>(null);
     const isRunningModeRef = useRef<boolean>(true);
     const syncDataRef = useRef<Article<SyncInfo>>(null);
-    const barSpeed = 250; //px per second
+    const barSpeed = 150; //px per second
 
     function draw(time:number) {
         if (!screen.current) return;
@@ -51,18 +51,20 @@ export function Screen(props:ScreenProps) {
             cx.beginPath();
             cx.fillStyle = "white";
 
-            if (props.existsVideo && props.video.current){
-                const video = props.video.current;
-                if (Math.abs(video.currentTime - time) > 0.3) {
-                    video.currentTime = time;
+            if (props.existsVideo){
+                if (props.video.current && props.isRunningMode){
+                    const video = props.video.current;
+                    if (Math.abs(video.currentTime - time) > 0.3) {
+                        video.currentTime = time;
+                    }
+                    if (props.audio?.paused && !video.paused){
+                        video.pause();
+                    }
+                    if (!props.audio?.paused && video.paused){
+                        video.play();
+                    }
+                    cx.drawImage(video, 0, 0, 800, 450);
                 }
-                if (props.audio?.paused && !video.paused){
-                    video.pause();
-                }
-                if (!props.audio?.paused && video.paused){
-                    video.play();
-                }
-                cx.drawImage(video, 0, 0, 800, 450);
             }
             else {
                 cx.fillRect(0, 0, screen.current.width, screen.current.height);
@@ -77,26 +79,27 @@ export function Screen(props:ScreenProps) {
             const syncArr = syncData.map(_ => _).flat(1);
             for (let i = 0; i < syncArr.length; i++){
                 if (syncArr[i].start < 0) continue;
-                const pitchY = frequencyToNoteName(syncArr[i].pitch).noteNumber;
+                const pitchInfo = frequencyToNoteName(syncArr[i].pitch);
+                const pitchHeight = !isNaN(pitchInfo.noteNumber!) && !isNaN(pitchInfo.octave!) && pitchInfo.octave! >= 3 ? 
+                    (pitchInfo.noteNumber! + 12 * (pitchInfo.octave! - 3)) : 0;
                 cx.roundRect(
                     400 + (syncArr[i].start - time) * barSpeed,
-                    118 - 8 * (isFinite(pitchY) ? pitchY : 0),
+                    200 - 5 * pitchHeight,
                     ((syncArr[i].end > 0 ? syncArr[i].end : time) - syncArr[i].start) * barSpeed,
-                    5, 5
+                    10, 10
                 );
             }
-            cx.stroke();
             cx.fill();
+            cx.stroke();
             cx.closePath();
 
-            cx.strokeStyle = "black";
-            cx.lineWidth = 4;
             cx.beginPath();
             cx.fillStyle = "black";
-            cx.rect(398, 17, 2, 104);
+            cx.rect(398, 10, 2, 200);
             cx.stroke();
             cx.fill();
             cx.closePath();
+            cx.lineWidth = 4;
 
             return;
         }
@@ -147,12 +150,14 @@ export function Screen(props:ScreenProps) {
         const syncArr = syncData.map(_ => _).flat(1);
         for (let i = 0; i < syncArr.length; i++){
             if (syncArr[i].start < 0) continue;
-            const pitchY = frequencyToNoteName(syncArr[i].pitch).noteNumber;
+            const pitchInfo = frequencyToNoteName(syncArr[i].pitch);
+            const pitchHeight = !isNaN(pitchInfo.noteNumber!) && !isNaN(pitchInfo.octave!) && pitchInfo.octave! >= 3 ? 
+                (pitchInfo.noteNumber! + 12 * (pitchInfo.octave! - 3)) : 0;
             cx.roundRect(
                 400 + (syncArr[i].start - time) * barSpeed,
-                118 - 8 * (isFinite(pitchY) ? pitchY : 0),
+                200 - 5 * pitchHeight,
                 ((syncArr[i].end > 0 ? syncArr[i].end : time) - syncArr[i].start) * barSpeed,
-                5, 5
+                10, 10
             );
         }
         cx.fill();
@@ -162,12 +167,15 @@ export function Screen(props:ScreenProps) {
         cx.beginPath();
         cx.fillStyle = "gold";
         for (let i = 0; i < syncArr.length; i++){
-            const pitchY = frequencyToNoteName(syncArr[i].pitch).noteNumber;
+            if (syncArr[i].start > time) continue;
+            const pitchInfo = frequencyToNoteName(syncArr[i].pitch);
+            const pitchHeight = !isNaN(pitchInfo.noteNumber!) && !isNaN(pitchInfo.octave!) && pitchInfo.octave! >= 3 ? 
+                (pitchInfo.noteNumber! + 12 * (pitchInfo.octave! - 3)) : 0;
             cx.roundRect(
                 400 + (syncArr[i].start - time) * barSpeed,
-                118 - 8 * (isFinite(pitchY) ? pitchY : 0),
+                200 - 5 * pitchHeight,
                 Math.max(Math.min(syncArr[i].end, time) - syncArr[i].start, 0) * barSpeed,
-                5, 5
+                10, 10
             );
         }
         cx.fill();
@@ -175,27 +183,29 @@ export function Screen(props:ScreenProps) {
         cx.closePath();
 
         cx.beginPath();
-        cx.lineWidth = 4;
         cx.fillStyle = "black";
-        cx.rect(398, 17, 2, 104);
+        cx.rect(398, 10, 2, 200);
         cx.stroke();
         cx.fill();
         cx.closePath();
+        cx.lineWidth = 4;
 
         cx.beginPath();
         cx.globalCompositeOperation = "destination-over";
-        if (props.existsVideo && props.video.current){
-            const video = props.video.current;
-            if (Math.abs(video.currentTime - time) > 0.3) {
-                video.currentTime = time;
+        if (props.existsVideo){
+            if (props.video.current && props.isRunningMode){
+                const video = props.video.current;
+                if (Math.abs(video.currentTime - time) > 0.3) {
+                    video.currentTime = time;
+                }
+                if (props.audio?.paused && !video.paused){
+                    video.pause();
+                }
+                if (!props.audio?.paused && video.paused){
+                    video.play();
+                }
+                cx.drawImage(video, 0, 0, 800, 450);
             }
-            if (props.audio?.paused && !video.paused){
-                video.pause();
-            }
-            if (!props.audio?.paused && video.paused){
-                video.play();
-            }
-            cx.drawImage(video, 0, 0, 800, 450);
         }
         else {
             cx.fillStyle = "white";

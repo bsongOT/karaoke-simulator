@@ -8,7 +8,7 @@ import { goBack, goForward, togglePlay, eraseSync, insertSync, closeSync } from 
 import JSZip from "jszip";
 import { SyncInfo } from "@/SyncInfo";
 import { Product, Shortcut, Slide } from "@/types";
-import { convert, download, getSyncDataBlob, wait } from "@/utils";
+import { convert, download, generateMelodies, getSyncDataBlob, wait } from "@/utils";
 import { LyricToolBox } from "./components/LyricToolBox";
 import { PitchGraph } from "./components/PitchGraph";
 import { SubmitSlide } from "./slides/SubmitSlide/SubmitSlide";
@@ -17,6 +17,8 @@ import { BuildSlide } from "./slides/BuildSlide/BuildSlide";
 import { LyricSearcher } from "./components/LyricSearcher";
 import { AudioManager } from "@/AudioManager";
 import { VolumeController } from "./slides/MainSlide/Leftside/VolumeController";
+import { ResultOptionList } from "./slides/MainSlide/Leftside/ResultOptionList";
+import { KeyboardBox } from "./slides/MainSlide/Main/KeyboardBox";
 
 export default function Home() {
   const [slide, setSlide] = useState(Slide.Submit);
@@ -26,7 +28,6 @@ export default function Home() {
     src: undefined,
     mr: undefined,
     vocal: undefined,
-    vocalSrc: "",
     karaokeVideo: undefined,
     singAlongVideo: undefined,
     dataJson: undefined
@@ -141,16 +142,15 @@ export default function Home() {
     const mr = await files.find(f => f.name.endsWith("mr.mp3"))?.async("blob");
 
     if (!vocal || !mr) return;
-
-    const vocalSrc = URL.createObjectURL(vocal);
-
+    
     pd.vocal = vocal;
-    pd.vocalSrc = vocalSrc;
     pd.mr = mr;
 
-    audio.current?.setVolume(0, 0);
     await audio.current?.register(mr);
+    audio.current?.setVolume(1, 0);
     await audio.current?.register(vocal);
+    audio.current?.setVolume(0, 0);
+    audio.current?.setVolume(1, 1);
 
     setProduct({ ...pd });
     setMrStatus("ready");
@@ -164,12 +164,12 @@ export default function Home() {
     return true;
   }
   const build = async () => {
-    if (!getBuildReady()) return;    
+    if (!getBuildReady()) return;
+
     setIsRunningMode(false);
     product.dataJson = await getSyncDataBlob(syncData);
     setSlide(Slide.Build);
-    console.log(canvasForBuildRef.current, drawForBuildRef.current);
-    const result = await convert(product, canvasForBuildRef.current!, drawForBuildRef.current!, audio.current?.duration ?? 0, 
+    const result = await convert(product, syncData, canvasForBuildRef.current!, drawForBuildRef.current!, audio.current?.duration ?? 0, 
     {
       onProgress: progress => {
         setBuildMessage(progress.message);
@@ -181,6 +181,8 @@ export default function Home() {
     zip.file("sing-along.mp4", result.singAlong);
     zip.file("karaoke.mp4", result.karaoke);
     zip.file("music.mp3", result.music);
+    zip.file(`${product.name} melodic.mp3`, result.melodicInst);
+    zip.file("melodic-karaoke.mp4", result.melodicKaraoke);
     zip.file(`${product.name} mr.mp3`, result.mr);
     zip.file("sync.json", result.syncData);
 
@@ -209,7 +211,10 @@ export default function Home() {
 
   return (
     <div className="app" style={{translate: `0 calc(${-100 * slide}% - ${40 * slide}px)`}}>
-      <SubmitSlide submit={submit} setToken={fetchMR}/>
+      <SubmitSlide 
+        submit={submit} 
+        setToken={fetchMR}
+      />
       <div className="slide main">
         <div className="left-side">
           <ResourceStatusView 
@@ -219,32 +224,13 @@ export default function Home() {
             resultStatus={product.mr && product.music && product.name !== "" && syncData.map(_ => _).flat().every(si => si.start > 0 && si.end > 0) ? "ready" : "pending"}
           />
           <div className="section-title">음량 조절</div>
-          <VolumeController audio={audio.current} mrStatus={mrStatus}/>
+          <VolumeController
+            audio={audio.current}
+            mrStatus={mrStatus}
+            melodyStatus={melodyStatus}
+          />
           <div className="section-title">결과물 옵션</div>
-          <div>
-            <ul>
-              <li className="result-option-item">
-                <input type="checkbox" checked></input>
-                <span>원곡</span>
-              </li>
-              <li className="result-option-item">
-                <input type="checkbox" checked></input>
-                <span>MR</span>
-              </li>
-              <li className="result-option-item">
-                <input type="checkbox" checked disabled></input>
-                <span>노래방 영상</span>
-              </li>
-              <li className="result-option-item">
-                <input type="checkbox" checked></input>
-                <span>따라부르기 영상</span>
-              </li>
-              <li className="result-option-item">
-                <input type="checkbox" checked></input>
-                <span>싱크 데이터</span>
-              </li>
-            </ul>
-          </div>
+          <ResultOptionList/>
           <button className={"build-btn" + (getBuildReady() ? "" : " disabled")} onClick={build}>빌드 시작</button>
         </div>
         <main className="main-view">
@@ -256,36 +242,15 @@ export default function Home() {
             syncData={syncData}
           />
           <video muted style={{display: "none"}} ref={videoRef} src={product.src} controls></video>
-          <div className="keyboard-box">
-            <div>
-              <div className="key-description">1초 전으로</div>
-              <button className={"keyboard key-arrow-left" + (keyPress?.has(Shortcut.Left) ? " pressed" : "")} title="Go 1 second ago">←</button>
-            </div>
-            <div>
-              <div className="key-description">정지/재생</div>
-              <button className={"keyboard key-spacebar" + (keyPress?.has(Shortcut.Space) ? " pressed" : "")} title="Stop audio">Space</button>
-            </div>
-            <div>
-              <div className="key-description">1초 후로</div>
-              <button className={"keyboard key-arrow-right" + (keyPress?.has(Shortcut.Right) ? " pressed" : "")} title="Go 1 second later">→</button>
-            </div>
-            <div>
-              <div className="key-description">채보 열기</div>
-              <button className={"keyboard key-a" + (keyPress?.has(Shortcut.A) ? " pressed" : "")} title="Open new sync">A</button>
-            </div>
-            <div>
-              <div className="key-description">채보 닫기</div>
-              <button className={"keyboard key-s" + (keyPress?.has(Shortcut.S) ? " pressed" : "")} title="Close current sync">S</button>
-            </div>
-            <div>
-              <div className="key-description">채보 지우기</div>
-              <button className={"keyboard key-backspace" + (keyPress?.has(Shortcut.Backspace) ? " pressed" : "")} title="Delete current sync">←Backspace</button>
-            </div>
-          </div>
+          <KeyboardBox keyPress={keyPress}/>
           <PitchGraph audio={audio.current} product={product} syncData={syncData} setMelodyStatus={setMelodyStatus}/>
         </main>
         <aside className="lyric-panel">
-          <LyricView syncData={syncData} rerenderSync={() => {setSyncData(new Article(syncData.map(_ => _)))}} currentIndex={currentIndex} setCurrentIndex={setCurrentIndex}/>
+          <LyricView
+            syncData={syncData}
+            rerenderSync={() => {setSyncData(new Article(syncData.map(_ => _)))}}
+            currentIndex={currentIndex} setCurrentIndex={setCurrentIndex}
+          />
           <LyricToolBox 
             syncData={syncData}
             setSyncData={setSyncData}
@@ -298,7 +263,8 @@ export default function Home() {
         message={buildMessage} 
         progress={buildProgress} 
         syncData={syncData} 
-        audio={audio.current} 
+        audio={audio.current}
+        video={videoRef.current} 
         setCanvas={cv => canvasForBuildRef.current = cv} 
         setDraw={dr => drawForBuildRef.current = dr} 
         startsBuild={!isRunningMode}

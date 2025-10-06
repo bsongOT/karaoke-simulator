@@ -33,7 +33,6 @@ export function FileProgress(props: FileProgressProps) {
             src: url,
             mr: undefined,
             vocal: undefined,
-            vocalSrc: "",
             karaokeVideo: undefined,
             singAlongVideo: undefined,
             dataJson: undefined
