@@ -10,8 +10,8 @@ import { frequencyToNoteName } from "@/utils";
 const C2 = 65;
 const C3 = 130;
 
-export function PitchGraph(props:{audio:AudioManager | null, product:Product, syncData:Article<SyncInfo>, setMelodyStatus:(v:"pending" | "ready")=>void}){
-  const framesRef = useRef<{freq:number|null}[]>([]);
+export function PitchGraph(props:{audio:AudioManager | null, product:Product, syncData:Article<SyncInfo>, setMelodyStatus:(v:"pending" | "ready")=>void, isRecording:boolean, setIsRecording:(v:boolean)=>void}){
+  const framesRef = useRef<{freq:number|null, clarity:number}[]>([]);
   const workerRef = useRef<Worker>(null);
   const pitchDetectorRef = useRef<PitchDetector<Float32Array>>(null);
   const [octaves, setOctaves] = useState(new Array<{noteNumber: number|null, note: string, octave: number|null}>());
@@ -19,7 +19,7 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
   const [syncChangeTrigger, setSyncChangeTrigger] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
   const [mode, setMode] = useState("melody" as "melody" | "mike");
-  const [isRecording, setIsRecording] = useState(false);
+  const {isRecording, setIsRecording} = props;
   const [mikeTotalPitches, setMikeTotalPitches] = useState(new Array<number>())
   const modeRef = useRef("melody" as "melody" | "mike");
   const isRecordingRef = useRef(false);
@@ -32,6 +32,7 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
   const frameSize = 2048;
   const [octaveRange, setOctaveRange] = useState([0, 8]);
   const octaveRangeTurnRef = useRef<0|1>(0);
+  const [hoverIndex, setHoverIndex] = useState<number>();
   useEffect(() => {
     if (audioContextRef.current) return;
     audioContextRef.current = new AudioContext();
@@ -62,7 +63,7 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
 
     if (!workerRef.current){
       workerRef.current = new Worker(new URL("../../pitchWorker.ts", import.meta.url));
-      framesRef.current = Array.from({length: Math.floor(channelData.length / frameSize)}).fill(0).map(() => ({freq: null}));
+      framesRef.current = Array.from({length: Math.floor(channelData.length / frameSize)}).fill(0).map(() => ({freq: null, clarity: 0}));
       let pitchCount = 0;
 
       for (let i = 0; i < channelData.length; i += frameSize * 20){
@@ -95,39 +96,32 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
             if (!isNaN(si.pitch) && si.pitch > 65) continue;
             const start = Math.floor(si.start * audioContext.sampleRate / frameSize);
             const end = Math.floor(si.end * audioContext.sampleRate / frameSize);
-            const part = frames.map(f => f.freq).slice(start, end).filter(f => f && !isNaN(f) && isFinite(f) && f > C3 && f < 1175).sort();
-            si.pitch = part.length > 1 ? (part[Math.floor(part.length / 2)] ?? 0) : 0;
+            const part = frames
+              .slice(start, end)
+              .filter(f => f.freq && !isNaN(f.freq) && isFinite(f.freq) && f.freq > C3 && f.freq < 1175)
+              .sort((a, b) => a.freq! - b.freq!);
+            if (part.length >= 1){
+              const weights = part.map(p => p.clarity / (1.01 - p.clarity));
+              const mid = weights.reduce((a, b) => a + b, 0) / 2;
+              let sum = 0;
+              let idx = 0;
+              for (idx = 0; idx < weights.length; idx++){
+                sum += weights[idx];
+                if (sum >= mid) break;
+              }
+              si.pitch = part[idx].freq ?? 0;
+            }
         }
         setOctaves(frames.map(f => frequencyToNoteName(f.freq)));
         const syncIdx = syncArr.findIndex(s => s.start <= props.audio!.currentTime && props.audio!.currentTime <= s.end);
         const sync = syncArr[syncIdx];
-        const syncPrev = syncArr[syncIdx - 1];
-        const syncNext = syncArr[syncIdx + 1];
         const pitch = sync?.pitch;
         if (sync && pitch) {
-            osc.frequency.value = pitch;
-            if (props.audio!.currentTime - sync.start < 0.05){
-              if (syncPrev && (syncPrev.end - syncPrev.start) < 0.15){
-                gain.gain.value = 0.2 + 8 * (props.audio!.currentTime - sync.start);
-              }
-              else {
-                gain.gain.value = 12 * (props.audio!.currentTime - sync.start);
-              }
-            }
-            else if (sync.end - props.audio!.currentTime >= 0.05){
-              gain.gain.value = 0.6 - 0.1 * (props.audio!.currentTime - sync.start - 0.1) / (sync.end - sync.start - 0.1);
-            }
-            else {
-              if (syncNext && (sync.end - sync.start) < 0.15){
-                gain.gain.value = 0.2 + 6 * (sync.end - props.audio!.currentTime);
-              }
-              else {
-                gain.gain.value = 10 * (sync.end - props.audio!.currentTime);
-              }
-            }
+          osc.frequency.value = pitch;
+          gain.gain.value = 0.5;
         }
         else {
-            gain.gain.value = 0;
+          gain.gain.value = 0;
         }
       }
       const mikePitches = Array.from({length: syncArr.length}).fill(0).map(() => 0);
@@ -148,7 +142,7 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
           mikeContextRef.current.analyser.getFloatTimeDomainData(mikeContextRef.current.dataArray);
           const [pitch, clarity] = pitchDetector.findPitch(mikeContextRef.current.dataArray, audioContext.sampleRate);
           
-          if (clarity > 0.8) {
+          if (clarity > 0.85) {
             mikeAllPitches[Math.floor(props.audio!.currentTime * 40)] = pitch;
           }
       }
@@ -176,8 +170,8 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
   useEffect(() => {modeRef.current = mode}, [mode]);
   useEffect(() => {isRecordingRef.current = isRecording}, [isRecording]);
   useEffect(() => {mikeTotalPitchesRef.current = mikeTotalPitches}, [mikeTotalPitches])
-  function raiseCurrentSyncPitch(amount:number){
-    const sync = props.syncData.map(_ => _).flat().find(s => s.start <= props.audio!.currentTime && props.audio!.currentTime <= s.end);
+  function raiseCurrentSyncPitch(amount:number, sc?:SyncInfo){
+    const sync = sc ?? props.syncData.map(_ => _).flat().find(s => s.start <= props.audio!.currentTime && props.audio!.currentTime <= s.end);
     if (!sync) return;
     sync.pitch *= Math.pow(2, amount / 12);
     if (sync.pitch <= 65 || isNaN(sync.pitch)) sync.pitch = 130;
@@ -193,29 +187,34 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
       <button 
         className={"toggle-button window-toggle" + (collapsed ? "" : " active")} 
         onClick={() => { setCollapsed(!collapsed)}}
-        onMouseDown={(e:React.MouseEvent) => e.preventDefault()}>
+        onMouseDown={(e:React.MouseEvent) => e.preventDefault()}
+        onFocus={(e:React.FocusEvent<HTMLButtonElement>)=>e.target.blur()}
+      >
           <LuActivity size={20}/>
       </button>
       <div className="pitch-graph-menu">
-        <button className={"toggle-button" + (isRecording ? " active" : "")} onClick={async () => {
-          if (!isRecording && !mikeContextRef.current){
-            const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const source = audioContextRef.current!.createMediaStreamSource(mic);
-            const analyser = audioContextRef.current!.createAnalyser();
-            source.connect(analyser);
-            analyser.fftSize = frameSize;
-            const bufferLength = analyser.fftSize;
-            const dataArray = new Float32Array(bufferLength);
-            mikeContextRef.current = {analyser, dataArray}
-            pitchDetectorRef.current = PitchDetector.forFloat32Array(frameSize);
-          }
-          setIsRecording(!isRecording)
-        }}>
+        <button className={"toggle-button" + (isRecording ? " active" : "")} 
+          onClick={async () => {
+            if (!isRecording && !mikeContextRef.current){
+              const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+              const source = audioContextRef.current!.createMediaStreamSource(mic);
+              const analyser = audioContextRef.current!.createAnalyser();
+              source.connect(analyser);
+              analyser.fftSize = frameSize;
+              const bufferLength = analyser.fftSize;
+              const dataArray = new Float32Array(bufferLength);
+              mikeContextRef.current = {analyser, dataArray}
+              pitchDetectorRef.current = PitchDetector.forFloat32Array(frameSize);
+            }
+            setIsRecording(!isRecording)
+          }}
+          onFocus={(e:React.FocusEvent<HTMLButtonElement>)=>e.target.blur()}
+        >
           {isRecording ? <LuMic size={20}/> : <LuMicOff size={20}/>}
         </button>
         <div className="button-container">
-          <button className={"pitch-view-select" + (mode === "melody" ? " active" : "")} onClick={() => {setMode("melody")}}>멜로디</button>
-          <button className={"pitch-view-select" + (mode === "mike" ? " active" : "")} onClick={() => {setMode("mike")}}>마이크</button>
+          <button className={"pitch-view-select" + (mode === "melody" ? " active" : "")} onClick={() => {setMode("melody")}} onFocus={(e:React.FocusEvent<HTMLButtonElement>)=>e.target.blur()}>멜로디</button>
+          <button className={"pitch-view-select" + (mode === "mike" ? " active" : "")} onClick={() => {setMode("mike")}} onFocus={(e:React.FocusEvent<HTMLButtonElement>)=>e.target.blur()}>마이크</button>
         </div>
         <div className="button-container">
           <button className="pitch-changer" onFocus={(e:React.FocusEvent<HTMLButtonElement>) => e.target.blur()} onClick={() => raiseCurrentSyncPitch(1)}>+1</button>
@@ -268,17 +267,23 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
                 const y = 110 - 8 * (pitchInfo.noteNumber ?? -1);
                 const color = ["purple", "blue", "skyblue", "green", "yellow", "orange", "red"][(pitchInfo.octave ?? 0) - 1] ?? "black";
                 return (
-                  <>
-                    <text fontSize={11} x={startX} y={y - 25} onClick={() => raiseCurrentSyncPitch(12)}>+12</text>
-                    <text fontSize={11} x={startX} y={y - 15} onClick={() => raiseCurrentSyncPitch(1)}>+1</text>
-                    <text fontSize={11} x={startX} y={y - 5}>{pitchInfo.note}</text>
-                    <text fontSize={11} x={startX} y={y + 15} onClick={() => raiseCurrentSyncPitch(-1)}>-1</text>
-                    <text fontSize={11} x={startX} y={y + 25} onClick={() => raiseCurrentSyncPitch(-12)}>-12</text>
+                  <g key={i} onMouseOver={() => setHoverIndex(i)} onMouseOut={() => setHoverIndex(-1)}>
+                    <rect width={endX - startX} height="120" x={startX} y="0" fill="#00000000"></rect>
+                    {
+                      hoverIndex !== i ?
+                      <text fontSize={11} x={startX} y={y - 5}>{pitchInfo.note}</text> :
+                      <>
+                      <text fontSize={11} x={startX} y={y - 15} onClick={() => raiseCurrentSyncPitch(12, sd)}>+12</text>
+                      <text fontSize={11} x={startX} y={y - 5} onClick={() => raiseCurrentSyncPitch(1, sd)}>+1</text>
+                      <text fontSize={11} x={startX} y={y + 15} onClick={() => raiseCurrentSyncPitch(-1, sd)}>-1</text>
+                      <text fontSize={11} x={startX} y={y + 25} onClick={() => raiseCurrentSyncPitch(-12, sd)}>-12</text>
+                      </>  
+                    }
                     <path
-                    fill="none" stroke={color} strokeWidth="4px"
-                    d={`M${startX} ${y} L${endX} ${y}`}
+                      fill="none" stroke={color} strokeWidth="4px"
+                      d={`M${startX} ${y} L${endX} ${y}`}
                     />
-                  </>
+                  </g>
                 )
                 })
             }

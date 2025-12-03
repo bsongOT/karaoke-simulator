@@ -9,7 +9,6 @@ type BuildSlideProps = {
     progress:number,
     syncData:Article<SyncInfo>,
     video:HTMLVideoElement|null,
-    audio:AudioManager|null,
     setCanvas:(canvas:HTMLCanvasElement)=>void,
     setDraw:(draw:(time:number)=>void)=>void,
     startsBuild:boolean
@@ -20,7 +19,6 @@ export function BuildSlide(props:BuildSlideProps){
             <div className="build-container">
                 <Screen
                     isRunningMode={false}
-                    audio={props.audio} 
                     video={useRef(props.video ?? null)} 
                     existsVideo={true} 
                     syncData={props.syncData}

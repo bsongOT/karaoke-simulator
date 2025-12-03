@@ -5,8 +5,9 @@ export async function POST(req:NextRequest){
     try {
         return await new Promise<NextResponse>(async resolve => {
             const url = (await req.formData()).get("url") as string;
-            const ytdl = spawn("./node_modules/youtube-dl-exec/bin/yt-dlp", [
-                "-f", "best[filesize_approx<15M]", 
+            const ytdl = spawn("yt-dlp", [
+                "-S", "+filesize,+filesize_approx",
+                "-f", "b[filesize>10M]/b[filesize_approx>10M]/b*[filesize<=10M]/b*[filesize_approx<=10M]", 
                 "-o", "-", url, 
                 "--no-warnings"
             ]);

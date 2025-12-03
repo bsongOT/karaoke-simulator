@@ -1,24 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LyricView } from "./components/LyricVIew";
-import { Screen } from "./components/Screen";
 import { Article } from "../data-struct/Article";
-import { goBack, goForward, togglePlay, eraseSync, insertSync, closeSync } from "@/behaviors";
+import { goBack, goForward, togglePlay, eraseSync, insertSync, closeSync, gotoNextSync, gotoPrevSync, raiseCurrentSyncPitch, setCurrentIndexByTime } from "@/behaviors";
 import JSZip from "jszip";
 import { SyncInfo } from "@/SyncInfo";
 import { Product, Shortcut, Slide } from "@/types";
-import { convert, download, generateMelodies, getSyncDataBlob, wait } from "@/utils";
-import { LyricToolBox } from "./components/LyricToolBox";
-import { PitchGraph } from "./components/PitchGraph";
+import { convert, download, getSyncDataBlob } from "@/utils";
 import { SubmitSlide } from "./slides/SubmitSlide/SubmitSlide";
-import { ResourceStatusView } from "./slides/MainSlide/Leftside/ResourceStatusView";
 import { BuildSlide } from "./slides/BuildSlide/BuildSlide";
 import { LyricSearcher } from "./components/LyricSearcher";
 import { AudioManager } from "@/AudioManager";
-import { VolumeController } from "./slides/MainSlide/Leftside/VolumeController";
-import { ResultOptionList } from "./slides/MainSlide/Leftside/ResultOptionList";
-import { KeyboardBox } from "./slides/MainSlide/Main/KeyboardBox";
+import { MainSlide } from "./slides/MainSlide/MainSlide";
+import { KeyboardManager } from "@/Facades/KeyboardManager";
+import { useKeys } from "@/custom-hooks";
 
 export default function Home() {
   const [slide, setSlide] = useState(Slide.Submit);
@@ -35,12 +30,13 @@ export default function Home() {
   const [musicFileStatus, setMusicFileStatus] = useState("pending" as "pending" | "error" | "ready");
   const [mrStatus, setMrStatus] = useState("pending" as "pending" | "error" | "ready");
   const [melodyStatus, setMelodyStatus] = useState("pending" as "pending" | "ready");
-  const [keyPress, setKeyPress] = useState<Set<Shortcut>>();
-  const keyPressRef = useRef<Set<Shortcut>>(null);
+  const [keyPress, setKeyPress] = useKeys();
 
+  const [isRecording, setIsRecording] = useState(false);
   const [syncData, setSyncData] = useState(new Article<SyncInfo>([[new SyncInfo(" ", -1, -1)]]))
   const [currentIndex, setCurrentIndex] = useState([0, 0] as [number, number]);
-  const [isRunningMode, setIsRunningMode] = useState(true);
+  //const syncDataSRef = useStateRef(new Article<SyncInfo>([[new SyncInfo(" ", -1, -1)]]));
+  //const currentIndexSRef = useStateRef<[number, number]>([0, 0]);
   const canvasForBuildRef = useRef<HTMLCanvasElement>(null);
   const drawForBuildRef = useRef<(time:number)=>void>(null);
   const audio = useRef<AudioManager>(null);
@@ -54,67 +50,50 @@ export default function Home() {
     }
     if (document.activeElement !== document.body) return;
     if (!audio.current) return;
-    if (!keyPressRef.current) return;
-    const key = keyPressRef.current;
+    if (e.code in setKeyPress){
+      setKeyPress[e.code as keyof typeof setKeyPress](true);
+    }
     switch(e.code){
-      case "ArrowLeft": 
-        setKeyPress(new Set(key.add(Shortcut.Left)));
-        return goBack(audio.current);
-      case "ArrowRight": 
-        setKeyPress(new Set(key.add(Shortcut.Right)));
-        return goForward(audio.current);
-      case "Space":
-        setKeyPress(new Set(key.add(Shortcut.Space)));
-        return togglePlay(audio.current);
-      case "Backspace": 
-        setKeyPress(new Set(key.add(Shortcut.Backspace)));
-        return eraseSync(syncData, currentIndex, setCurrentIndex, () => setSyncData(new Article(syncData.map(_ => _))));
-      case "KeyA":
-        setKeyPress(new Set(key.add(Shortcut.A)));
-        return insertSync(syncData, currentIndex, setCurrentIndex, audio.current, () => setSyncData(new Article(syncData.map(_ => _))));
-      case "KeyS": 
-        setKeyPress(new Set(key.add(Shortcut.S)));
-        return closeSync(syncData, currentIndex, audio.current, () => setSyncData(new Article(syncData.map(_ => _))));
+      case "ArrowLeft": return goBack(audio.current);
+      case "ArrowRight": return goForward(audio.current);
+      case "Space": return togglePlay(audio.current);
+      case "Backspace": return eraseSync(syncData, currentIndex, setCurrentIndex, () => setSyncData(new Article(syncData.map(_ => _))));
+      case "KeyA": return insertSync(syncData, currentIndex, setCurrentIndex, audio.current, () => setSyncData(new Article(syncData.map(_ => _))));
+      case "KeyS": return closeSync(syncData, currentIndex, audio.current, () => setSyncData(new Article(syncData.map(_ => _))));
+      case "Comma": return gotoPrevSync(audio.current, syncData);
+      case "Period": return gotoNextSync(audio.current, syncData);
+      case "ArrowUp": 
+        if (e.shiftKey) return raiseCurrentSyncPitch(syncData, audio.current.currentTime, 12, () => setSyncData(new Article(syncData.map(_ => _))));
+        return raiseCurrentSyncPitch(syncData, audio.current.currentTime, 1, () => setSyncData(new Article(syncData.map(_ => _))));
+      case "ArrowDown": 
+        if (e.shiftKey) return raiseCurrentSyncPitch(syncData, audio.current.currentTime, -12, () => setSyncData(new Article(syncData.map(_ => _))));
+        return raiseCurrentSyncPitch(syncData, audio.current.currentTime, -1, () => setSyncData(new Article(syncData.map(_ => _))));
+      case "Enter": return setCurrentIndexByTime(setCurrentIndex, syncData, audio.current.currentTime);
+      case "KeyR": return setIsRecording(!isRecording);
     }
   }
   const handleKeyUp = (e:KeyboardEvent) => {
-    const key = keyPressRef.current;
-    if (!key) return;
-    switch(e.code){
-      case "ArrowLeft": 
-        key.delete(Shortcut.Left);
-        return setKeyPress(new Set(key));
-      case "ArrowRight": 
-        key.delete(Shortcut.Right);
-        return setKeyPress(new Set(key));
-      case "Space": 
-        key.delete(Shortcut.Space);
-        return setKeyPress(new Set(key));
-      case "Backspace": 
-        key.delete(Shortcut.Backspace);
-        return setKeyPress(new Set(key));
-      case "KeyA": 
-        key.delete(Shortcut.A);
-        return setKeyPress(new Set(key));
-      case "KeyS": 
-        key.delete(Shortcut.S);
-        return setKeyPress(new Set(key));
+    if (e.code in setKeyPress){
+      setKeyPress[e.code as keyof typeof setKeyPress](false);
     }
   }
 
   useEffect(() => {
-    setKeyPress(new Set());
+    if (audio.current) return;
+
     audio.current = new AudioManager(new AudioContext());
     document.addEventListener("keyup", handleKeyUp);
+    return () => {
+      audio.current?.quit();
+    }
   }, [])
-  useEffect(() => {keyPressRef.current = keyPress ?? null}, [keyPress])
   useEffect(
     () => {
       document.addEventListener("keydown", handleKey);
       return () => {
         document.removeEventListener("keydown", handleKey);
       }
-    }, [keyPress, syncData, currentIndex]
+    }, [syncData, currentIndex, isRecording]
   )
   const fetchMR = async (token:string, pd:Product) => {
     if (token === "") return;
@@ -123,7 +102,7 @@ export default function Home() {
     const res = await fetch("/api/fetch-seperate-result", {
       method: "POST",
       body: formData
-    })
+    });
     if (res.headers.get("content-type")?.includes("application/json")) {
       const json = await res.json();
       if (json.error) {
@@ -155,40 +134,6 @@ export default function Home() {
     setProduct({ ...pd });
     setMrStatus("ready");
   }
-  const getBuildReady = () => {
-    if (mrStatus !== "ready") return false;
-    if (musicFileStatus !== "ready") return false;
-    if (melodyStatus !== "ready") return false;
-    if (!product.mr || !product.music || product.name === "" ||
-        !syncData.map(_ => _).flat().every(si => si.start > 0 && si.end > 0)) return false;
-    return true;
-  }
-  const build = async () => {
-    if (!getBuildReady()) return;
-
-    setIsRunningMode(false);
-    product.dataJson = await getSyncDataBlob(syncData);
-    setSlide(Slide.Build);
-    const result = await convert(product, syncData, canvasForBuildRef.current!, drawForBuildRef.current!, audio.current?.duration ?? 0, 
-    {
-      onProgress: progress => {
-        setBuildMessage(progress.message);
-        setBuildProgress(progress.percent);
-      }
-    });
-    const zip = new JSZip();
-	
-    zip.file("sing-along.mp4", result.singAlong);
-    zip.file("karaoke.mp4", result.karaoke);
-    zip.file("music.mp3", result.music);
-    zip.file(`${product.name} melodic.mp3`, result.melodicInst);
-    zip.file("melodic-karaoke.mp4", result.melodicKaraoke);
-    zip.file(`${product.name} mr.mp3`, result.mr);
-    zip.file("sync.json", result.syncData);
-
-    const zipBlob = await zip.generateAsync({type: 'blob'});
-    download(URL.createObjectURL(zipBlob), `${product.name}.zip`);
-  }
 
   const submit = async (p:Product, sd?:Article<SyncInfo>) => {
     setProduct(p);
@@ -197,16 +142,42 @@ export default function Home() {
       setCurrentIndex(sd.lastIndex);
     }
     setSlide(Slide.Main);
-    if (p.music) {
-      await audio.current?.register(p.music);
-      setMusicFileStatus("ready");
-    }
-    if (p.mr && p.vocal) {
-      audio.current?.setVolume(0, 0);
-      await audio.current?.register(p.mr);
-      await audio.current?.register(p.vocal);
-      setMrStatus("ready");
-    }
+    if (!p.music) return;
+
+    await audio.current?.register(p.music);
+    setMusicFileStatus("ready");
+    
+    if (!p.mr || !p.vocal) return;
+
+    audio.current?.setVolume(0, 0);
+    await audio.current?.register(p.mr);
+    await audio.current?.register(p.vocal);
+    setMrStatus("ready");
+  }
+
+  const build = async (duration:number) => {
+      setSlide(Slide.Build);
+      product.dataJson = await getSyncDataBlob(syncData);
+      const result = await convert(product, syncData, canvasForBuildRef.current!, drawForBuildRef.current!, duration, 
+      {
+        onProgress: progress => {
+          setBuildMessage(progress.message);
+          setBuildProgress(progress.percent);
+        }
+      });
+      const zip = new JSZip();
+      
+      zip.file("sing-along.mp4", result.singAlong);
+      zip.file("karaoke.mp4", result.karaoke);
+      zip.file("music.mp3", result.music);
+      zip.file(`${product.name} melodic.mp3`, result.melodicInst);
+      zip.file("melodic-karaoke.mp4", result.melodicKaraoke);
+      zip.file(`${product.name} mr.mp3`, result.mr);
+      zip.file("sync.json", result.syncData);
+  
+      const zipBlob = await zip.generateAsync({type: 'blob'});
+      download(URL.createObjectURL(zipBlob), `${product.name}.zip`);
+      window.onbeforeunload = null;
   }
 
   return (
@@ -215,59 +186,33 @@ export default function Home() {
         submit={submit} 
         setToken={fetchMR}
       />
-      <div className="slide main">
-        <div className="left-side">
-          <ResourceStatusView 
-            musicFileStatus={musicFileStatus}
-            mrStatus={mrStatus}
-            melodyStatus={melodyStatus}
-            resultStatus={product.mr && product.music && product.name !== "" && syncData.map(_ => _).flat().every(si => si.start > 0 && si.end > 0) ? "ready" : "pending"}
-          />
-          <div className="section-title">음량 조절</div>
-          <VolumeController
-            audio={audio.current}
-            mrStatus={mrStatus}
-            melodyStatus={melodyStatus}
-          />
-          <div className="section-title">결과물 옵션</div>
-          <ResultOptionList/>
-          <button className={"build-btn" + (getBuildReady() ? "" : " disabled")} onClick={build}>빌드 시작</button>
-        </div>
-        <main className="main-view">
-          <Screen 
-            isRunningMode={isRunningMode} 
-            audio={audio.current} 
-            video={videoRef}
-            existsVideo={product.music?.type.startsWith("video/") ?? false}
-            syncData={syncData}
-          />
-          <video muted style={{display: "none"}} ref={videoRef} src={product.src} controls></video>
-          <KeyboardBox keyPress={keyPress}/>
-          <PitchGraph audio={audio.current} product={product} syncData={syncData} setMelodyStatus={setMelodyStatus}/>
-        </main>
-        <aside className="lyric-panel">
-          <LyricView
-            syncData={syncData}
-            rerenderSync={() => {setSyncData(new Article(syncData.map(_ => _)))}}
-            currentIndex={currentIndex} setCurrentIndex={setCurrentIndex}
-          />
-          <LyricToolBox 
-            syncData={syncData}
-            setSyncData={setSyncData}
-            setCurrentIndex={setCurrentIndex}
-            openSearcher={() => {setIsLyricSearcherOpened(true)}}
-          />
-        </aside>
-      </div>
+      <MainSlide
+        build={build}
+        openLyricSearcher={() => { setIsLyricSearcherOpened(true); } } 
+        musicFileStatus={musicFileStatus} 
+        mrStatus={mrStatus} 
+        melodyStatus={melodyStatus} 
+        setMelodyStatus={setMelodyStatus}
+        product={product} 
+        syncData={syncData} 
+        setSyncData={setSyncData}
+        videoRef={videoRef} 
+        audio={audio.current} 
+        keyPress={keyPress}
+        isEditting={slide === Slide.Main}
+        currentIndex={currentIndex}
+        setCurrentIndex={setCurrentIndex}
+        isRecording={isRecording}
+        setIsRecording={setIsRecording}
+      />
       <BuildSlide 
         message={buildMessage} 
         progress={buildProgress} 
-        syncData={syncData} 
-        audio={audio.current}
+        syncData={syncData}
         video={videoRef.current} 
         setCanvas={cv => canvasForBuildRef.current = cv} 
         setDraw={dr => drawForBuildRef.current = dr} 
-        startsBuild={!isRunningMode}
+        startsBuild={slide === Slide.Build}
       />
       {isLyricSearcherOpened && <LyricSearcher setSyncData={setSyncData} closeLyricSearcher={()=>setIsLyricSearcherOpened(false)}/>}
     </div>

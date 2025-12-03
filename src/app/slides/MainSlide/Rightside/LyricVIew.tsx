@@ -40,6 +40,7 @@ function Line(props:{syncData:Article<SyncInfo>, index:number, currentIndex:[num
 
         if (lines.length > 1){
             props.syncData.insertLine(props.index + 1, ...lines.slice(1).map(v => toNotes(v)));
+            text.blur();
         }
         props.rerenderSync();
     }

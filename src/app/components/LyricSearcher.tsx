@@ -17,33 +17,44 @@ export function LyricSearcher(props:{setSyncData:(sd:Article<SyncInfo>)=>void, c
                         }}
                         placeholder="우타텐 URL을 입력하세요.(예시: https://utaten.com/lyric/qk19044046/)"
                     />
-                    <button onClick={() => {
-                        window.open("https://utaten.com/");
-                    }}>
+                    <button 
+                        onClick={() => {window.open("https://utaten.com/");}}
+                        onFocus={(e:React.FocusEvent<HTMLButtonElement>)=>e.target.blur()}
+                    >
                         탐색
                     </button>
-                    <button onClick={async () => {
-                        if (url.trim() === "") return;
-                        const form = new FormData();
-                        form.append("url", url);
-                        const res = await fetch("/api/search-jpop", {
-                            method: "POST",
-                            body: form
-                        });
-                        const json = await res.json();
-                        setLyricLines(json.lyric.split("\n"));
-                    }}>불러오기</button>
+                    <button 
+                        onClick={async () => {
+                            if (url.trim() === "") return;
+                            const form = new FormData();
+                            form.append("url", url);
+                            const res = await fetch("/api/search-jpop", {
+                                method: "POST",
+                                body: form
+                            });
+                            const json = await res.json();
+                            setLyricLines(json.lyric.split("\n"));
+                        }}
+                        onFocus={(e:React.FocusEvent<HTMLButtonElement>)=>e.target.blur()}
+                    >
+                        불러오기
+                    </button>
                 </div>
             </div>
             <div className="lyric-container">
                 {...lyricLines.map((l, i) => <div key={i}>{l}</div>)}
             </div>
-            <button onClick={() => {
-                props.setSyncData(
-                    new Article<SyncInfo>(lyricLines.map(l => toNotes(l)))
-                );
-                props.closeLyricSearcher();
-            }}>적용</button>
+            <button 
+                onClick={() => {
+                    props.setSyncData(
+                        new Article<SyncInfo>(lyricLines.map(l => toNotes(l)))
+                    );
+                    props.closeLyricSearcher();
+                }}
+                onFocus={(e:React.FocusEvent<HTMLButtonElement>)=>e.target.blur()}
+            >
+                적용
+            </button>
         </div>
     )
 }

@@ -16,6 +16,56 @@ export function useStateRef<T>(defaultValue:T){
         }
     }
 }
+export function useForceUpdate(){
+    const [toggle, setToggle] = useState(0);
+
+    return () => setToggle(1 - toggle);
+}
+export function useKeys(){
+    const [ArrowLeft, setArrowLeft] = useState(false);
+    const [ArrowRight, setArrowRight] = useState(false);
+    const [Space, setSpace] = useState(false);
+    const [Backspace, setBackspace] = useState(false);
+    const [KeyA, setKeyA] = useState(false);
+    const [KeyS, setKeyS] = useState(false);
+
+    return [
+        {
+            ArrowLeft,
+            ArrowRight,
+            Space,
+            Backspace,
+            KeyA,
+            KeyS
+        },
+        {
+            ArrowLeft: setArrowLeft,
+            ArrowRight: setArrowRight,
+            Space: setSpace,
+            Backspace: setBackspace,
+            KeyA: setKeyA,
+            KeyS: setKeyS
+        }
+    ] as const
+}
+export function useStatuses(){
+    const [musicFileStatus, setMusicFileStatus] = useState("pending" as "pending" | "error" | "ready");
+    const [mrStatus, setMrStatus] = useState("pending" as "pending" | "error" | "ready");
+    const [melodyStatus, setMelodyStatus] = useState("pending" as "pending" | "ready");
+
+    return [
+        {
+            musicFileStatus,
+            mrStatus,
+            melodyStatus
+        },
+        {
+            setMusicFileStatus,
+            setMrStatus,
+            setMelodyStatus
+        }
+    ] as const
+}
 export function useResultOption(){
     const [includesMusic, setIncludesMusic] = useState(true);
     const [includesMR, setIncludesMR] = useState(true);
@@ -40,5 +90,5 @@ export function useResultOption(){
             setIncludesSingAlong,
             setIncludesData
         }
-    ]
+    ] as const
 }

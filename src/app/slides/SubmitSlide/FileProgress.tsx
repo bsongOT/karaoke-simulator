@@ -49,9 +49,9 @@ export function FileProgress(props: FileProgressProps) {
         })
         const json = await res.json();
         props.setToken(json.token, product);
-        window.addEventListener("beforeunload", e => {
+        window.onbeforeunload = e => {
             e.preventDefault();
-        })
+        }
     }
 
     return (

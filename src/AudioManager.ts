@@ -49,6 +49,10 @@ export class AudioManager {
     public setVolume(index:number, volume:number){
         this.list[index].volume = volume;
     }
+    public quit(){
+        this.pause();
+        this.list = [];
+    }
 }
 interface AudioInfoInterface {
     duration:number,

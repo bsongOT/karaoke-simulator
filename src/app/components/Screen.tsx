@@ -6,7 +6,7 @@ import React, { ChangeEvent, RefObject, useEffect, useMemo, useRef, useState } f
 
 type ScreenProps = {
     isRunningMode:boolean,
-    audio:AudioManager|null,
+    audio?:AudioManager|null,
     video:RefObject<HTMLVideoElement | null>,
     existsVideo:boolean,
     syncData:Article<SyncInfo>,
@@ -248,7 +248,7 @@ export function Screen(props:ScreenProps) {
     return (
         <div className="screen">
             <canvas ref={screen} width={800} height={450}></canvas>
-            {props.isRunningMode && <PlayerController audio={props.audio}/>}
+            {props.isRunningMode && <PlayerController audio={props.audio ?? null}/>}
         </div>
     )
 }

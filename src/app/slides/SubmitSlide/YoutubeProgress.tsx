@@ -47,10 +47,10 @@ export function YoutubeProgress(props:YoutubeProgressProps){
       <button 
         className={"start-btn" + (ready ? "" : " disabled")}
         onClick={async () => {
-          const product = {
+          const product:Product = {
             name: name.length === 0 ? "제목없음" : name,
             music: undefined as Blob | undefined,
-            src: "",
+            src: undefined,
             mr: undefined,
             vocal: undefined,
             karaokeVideo: undefined,
@@ -75,9 +75,9 @@ export function YoutubeProgress(props:YoutubeProgressProps){
 
           product.music = blob;
           product.src = URL.createObjectURL(blob);
-          window.addEventListener("beforeunload", e => {
+          window.onbeforeunload = e => {
             e.preventDefault();
-          })
+          }
 
           props.submit(product);
 

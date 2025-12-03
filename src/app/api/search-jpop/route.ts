@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
     });
     lyric = lyric.split("\n")
       .filter(sen => sen.trim().length >= 1)
-      .map(sen => toHiragana(sen.trim()))
-      .map(sen => kanaStringToHangul(sen))
+      .map(sen => toHiragana(sen.trim(), {passRomaji: true}))
+      .map(sen => kanaStringToHangul(sen).trim())
       .map(sen => {
         const arr = new Array<string>();
         const words = sen.split(" ");
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         for (let i = 0; i < words.length; i++){
           str += " " + words[i];
           current += words[i].length;
-          if (current + (words[i + 1] ?? "").length > 12 || i === words.length - 1){
+          if (current + (words[i + 1] ?? "").length > 15 || i === words.length - 1){
             arr.push(str.trim());
             str = "";
             current = 0;

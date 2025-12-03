@@ -16,13 +16,21 @@ export function syllabify(words:string) {
 
 export function toSylls(sentence:string){
     const words = sentence.split(" ");
-    const syllables = [];
+    const syllables = [] as SyncInfo[];
 
     for (let i = 0; i < words?.length; i++){
         const english = /^[A-Za-z]*$/;
 
         if (english.test(words[i][0])){
-            syllables.push(...syllabify(words[i]).map(w => new SyncInfo(w, -1, -1)))
+            syllables.push(...words[i].split("~").map(
+                (part, idx) => [
+                    ...(idx > 0 ? [new SyncInfo("~", -1, -1)] : []),
+                    ...syllabify(part)
+                    .map(w => new SyncInfo(w, -1, -1))
+                ]
+                )
+                .flat()
+            )
         }
         else{
             syllables.push(...words[i].split("").map(w => new SyncInfo(w, -1, -1)))
@@ -206,13 +214,13 @@ export async function generateMelodies(syncData: Article<SyncInfo>, duration: nu
         const prevSync = syncArr[i - 1];
         const nextSync = syncArr[i + 1];
         
-        if (prevSync && (prevSync.end - prevSync.start) < 0.15 && Math.abs(sync.start - prevSync.end) < 0.0001) 
+        if (prevSync && Math.abs(sync.start - prevSync.end) < 0.0001) 
             gain.gain.setValueAtTime(0.3, sync.start);
         else 
             gain.gain.setValueAtTime(0, sync.start);
         gain.gain.linearRampToValueAtTime(0.6, sync.start + 0.05);
         gain.gain.linearRampToValueAtTime(0.5, sync.end - 0.05);
-        if (nextSync && sync.end - sync.start < 0.15 && Math.abs(nextSync.start - sync.end) < 0.0001)
+        if (nextSync && Math.abs(nextSync.start - sync.end) < 0.0001)
             gain.gain.linearRampToValueAtTime(0.3, sync.end);
         else 
             gain.gain.linearRampToValueAtTime(0, sync.end);
@@ -249,6 +257,7 @@ export async function generateMelodies(syncData: Article<SyncInfo>, duration: nu
             message: "(1/7) 보컬 멜로디 작업 중...",
             percent: i / samples.length
         })
+        if ((i / blockSize) % 20 === 0) await new Promise(resolve => setTimeout(resolve, 0))
     }
     const endBuf = mp3encoder.flush();
     if (endBuf.length > 0) {
