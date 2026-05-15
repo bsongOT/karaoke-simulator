@@ -11,7 +11,7 @@ type ProgressInputProps = {
     setToken:(token:string, pd:Product)=>void
 }
 export function ProgressInput(props:ProgressInputProps){
-    const [audioReceiver, setAudioReceiver] = useState("youtube" as "youtube" | "file" | "zip");
+    const [audioReceiver, setAudioReceiver] = useState("file" as "youtube" | "file" | "zip");
     const {submit, setToken} = props;
 
     return (
@@ -35,13 +35,13 @@ function ProgressChoice(props:ProgressChoiceProps){
     const {audioReceiver, setAudioReceiver} = props;
     return (
         <div className="progress-choice">
-            <div 
+            {/* <div 
                 className={audioReceiver === "youtube" ? "selected progress-tab" : "progress-tab"} 
                 onClick={() => setAudioReceiver("youtube")}>
                 <div className="upper"></div>
                 <div className="lower"></div>
                 <div>유튜브</div>
-            </div>
+            </div> */}
             <div 
                 className={audioReceiver === "file" ? "selected progress-tab" : "progress-tab"} 
                 onClick={() => setAudioReceiver("file")}>

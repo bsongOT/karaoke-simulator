@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Karaoke Simulator
 
-## Getting Started
+영상 또는 음악 파일을 받아서 노래방 영상으로 만들 수 있는 에디터입니다.
 
-First, run the development server:
+https://norae.songgot.co.kr/
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+여기서 직접 해볼 수 있습니다.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 사용법
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. 영상이나 음악 파일을 넣고 [시작] 버튼을 누릅니다.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. 서버에서 MR과 보컬을 나누는 동안 가사를 입력합니다.
 
-## Learn More
+    2-1. 한국 노래일 경우 가사를 검색해서 가사 창에 붙여넣으면 됩니다.
 
-To learn more about Next.js, take a look at the following resources:
+    2-2. 일본 노래일 경우 [가사 검색] 버튼을 이용하면 한국어 발음으로 된 가사를 얻을 수 있습니다.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. 가사가 너무 길어서 화면을 벗어날 경우 직접 나눠주거나 [가사 분리] 버튼을 이용합니다.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. 노래의 박자에 맞춰 A키를 눌러서 박자를 입력할 수 있습니다.
 
-## Deploy on Vercel
+5. 음절을 닫고 싶으면 S키를 눌러서 닫을 수 있습니다.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+6. 음파 모양 버튼을 눌러서 음정을 확인할 수 있습니다.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+7. 추측된 음이 틀렸을 경우 위쪽/아래쪽 방향키로 음정을 1키씩 조절할 수 있습니다.
+
+8. Shift + 위쪽/아래쪽 방향키를 통해 옥타브(높은도 -> 낮은도)를 조절할 수 있습니다.
+
+9. 가사에 박자가 모두 들어가면 빌드를 할 수 있습니다.
+
+10. 빌드를 하면 작업했던 영상과 mr 그리고 박자 데이터가 담긴 json이 압축된 zip 파일로 다운로드됩니다.
+
+11. 해당 zip 파일은 맨 첫화면에서 넣으면 가사/박자 정보를 수정할 수 있습니다.
+
+## 작업 예시
+
+<video src="attach/demo.mp4" width="320" height="240" controls></video>
+
+## 빌드 결과물
+
+zip 파일 형태의 출력물과 압축 해제한 모습
+
+![결과물](attach/output.png)
+
+karaoke.mp4(반주 + 영상 + 가사 하이라이팅)
+
+<video src="attach/karaoke.mp4" width="320" height="240" controls></video>
+
+melodic-karaoke.mp4(반주 + 보컬 멜로디 라인 + 영상 + 가사 하이라이팅)
+
+<video src="attach/melodic-karaoke.mp4" width="320" height="240" controls></video>
+
+## 기술 스택
+
+1. React
+
+2. Next.js
+
+3. Spleeter
+
+4. Google Cloud Platform

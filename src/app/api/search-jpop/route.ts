@@ -6,13 +6,15 @@ import { kanaStringToHangul } from "@/kana-hangul/converter";
 
 export async function POST(req: NextRequest) {
   try {
-    const url = ((await req.formData()).get("url") ?? "") as string;
-    if (url === "") return NextResponse.json({ error: "invalid url" });
-    const { data } = await axios.get(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0"
-      }
-    });
+    const formData = await req.formData();
+    const artist = formData.get("artist");
+    const title = formData.get("title");
+    const url = `https://utaten.com/search?sort=popular_sort_asc&artist_name=${artist}&title=${title}`;
+    const search = await axios.get(url, { headers: { "User-Agent": "Mozilla/5.0" }});
+    const $$ = cheerio.load(search.data);
+    const lyricRoute = $$(".searchResult .searchResult__title a").attr("href");
+    const lyricUrl = `https://utaten.com${lyricRoute}`;
+    const { data } = await axios.get(lyricUrl, { headers: { "User-Agent": "Mozilla/5.0" }});
     const $ = cheerio.load(data);
     const container = $(".hiragana");
     let lyric = "";

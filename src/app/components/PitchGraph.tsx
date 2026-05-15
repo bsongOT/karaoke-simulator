@@ -6,6 +6,7 @@ import { LuActivity, LuMic, LuMicOff } from "react-icons/lu";
 import { PitchDetector } from "pitchy";
 import { AudioManager } from "@/AudioManager";
 import { frequencyToNoteName } from "@/utils";
+import { context, getAudioContext, getGain, getOSC } from "@/context";
 
 const C2 = 65;
 const C3 = 130;
@@ -24,25 +25,21 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
   const modeRef = useRef("melody" as "melody" | "mike");
   const isRecordingRef = useRef(false);
   const mikeTotalPitchesRef = useRef(new Array<number>());
-  const audioContextRef = useRef<AudioContext>(null);
-  const oscRef = useRef<OscillatorNode>(null);
-  const gainRef = useRef<GainNode>(null);
   const mikeContextRef = useRef<{analyser: AnalyserNode, dataArray:Float32Array<ArrayBuffer>}>(null);
   const syncDataRef = useRef<Article<SyncInfo>>(props.syncData);
-  const frameSize = 2048;
+  const frameSize = 1024;
   const [octaveRange, setOctaveRange] = useState([0, 8]);
   const octaveRangeTurnRef = useRef<0|1>(0);
   const [hoverIndex, setHoverIndex] = useState<number>();
   useEffect(() => {
-    if (audioContextRef.current) return;
-    audioContextRef.current = new AudioContext();
-    oscRef.current = audioContextRef.current.createOscillator();
-    oscRef.current.type = "sine";
-    gainRef.current = audioContextRef.current.createGain();
-    gainRef.current.gain.value = 0;
-    oscRef.current.connect(gainRef.current);
-    gainRef.current.connect(audioContextRef.current.destination);
-    oscRef.current.start();
+    const audioContext = getAudioContext();
+    const osc = getOSC();
+    osc.type = "sine";
+    const gain = getGain();
+    gain.gain.value = 0;
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.start();
   }, [])
   useEffect(() => {syncDataRef.current = props.syncData}, [props.syncData])
   useEffect(() => {
@@ -51,9 +48,9 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
     if (!props.product.vocal) return;
     if (!props.audio) return;
 
-    const audioContext = audioContextRef.current!;
-    const osc = oscRef.current!;
-    const gain = gainRef.current!;
+    const audioContext = getAudioContext();
+    const osc = getOSC();
+    const gain = getGain();
 
     const arrayBuffer = await props.product.vocal.arrayBuffer();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
@@ -118,7 +115,7 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
         const pitch = sync?.pitch;
         if (sync && pitch) {
           osc.frequency.value = pitch;
-          gain.gain.value = 0.5;
+          gain.gain.value = context.melodyVolume;
         }
         else {
           gain.gain.value = 0;
@@ -152,7 +149,7 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
               if (mikePitches[pitchIndex] >= C2){
                   osc.frequency.value = mikePitches[pitchIndex];
               }
-              gain.gain.value = 0.5;
+              gain.gain.value = context.melodyVolume;
           }
           else {
               gain.gain.value = 0;
@@ -196,9 +193,10 @@ export function PitchGraph(props:{audio:AudioManager | null, product:Product, sy
         <button className={"toggle-button" + (isRecording ? " active" : "")} 
           onClick={async () => {
             if (!isRecording && !mikeContextRef.current){
+              const audioContext = getAudioContext();
               const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
-              const source = audioContextRef.current!.createMediaStreamSource(mic);
-              const analyser = audioContextRef.current!.createAnalyser();
+              const source = audioContext.createMediaStreamSource(mic);
+              const analyser = audioContext.createAnalyser();
               source.connect(analyser);
               analyser.fftSize = frameSize;
               const bufferLength = analyser.fftSize;

@@ -1,4 +1,5 @@
 import FileDropzone from "@/app/components/FileDropZone";
+import { getAudioContext } from "@/context";
 import { Article } from "@/data-struct/Article";
 import { SyncInfo } from "@/SyncInfo";
 import { Product } from "@/types";
@@ -25,6 +26,7 @@ export function FileProgress(props: FileProgressProps) {
     const onSubmit = async () => {
         if (!ready) return;
         if (!fileRef.current) return;
+        getAudioContext().resume();
         const file = fileRef.current;
         const url = URL.createObjectURL(file);
         const product = {

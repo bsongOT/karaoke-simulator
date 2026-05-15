@@ -1,4 +1,5 @@
 import { AudioManager } from "@/AudioManager";
+import { context, getGain } from "@/context";
 import { useRef, useState } from "react";
 
 export function VolumeController(props:{audio:AudioManager | null, mrStatus:"ready" | "pending" | "error", melodyStatus:"ready" | "pending"}) {
@@ -22,13 +23,14 @@ export function VolumeController(props:{audio:AudioManager | null, mrStatus:"rea
                     value={audio?.volume[2] ?? 0} 
                     setValue={v => audio?.setVolume(2, v)}
                 />
-                {melodyStatus === "ready" &&
                 <VolumeSlider
                     title="멜로디 볼륨"
-                    value={audio?.volume[3] ?? 0} 
-                    setValue={v => audio?.setVolume(3, v)}
+                    value={ context.melodyVolume } 
+                    setValue={v => {
+                        context.melodyVolume = v
+                        getGain().gain.value = v
+                    }}
                 />
-                }
                 </>
             }
         </div>
