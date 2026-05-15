@@ -36,7 +36,7 @@ https://norae.songgot.co.kr/
 
 ## 작업 예시
 
-<video src="attach/demo.mp4" width="320" height="240" controls></video>
+[영상 보기](attach/demo.mp4)
 
 ## 빌드 결과물
 
@@ -46,11 +46,11 @@ zip 파일 형태의 출력물과 압축 해제한 모습
 
 karaoke.mp4(반주 + 영상 + 가사 하이라이팅)
 
-<video src="attach/karaoke.mp4" width="320" height="240" controls></video>
+[영상 보기](attach/karaoke.mp4)
 
 melodic-karaoke.mp4(반주 + 보컬 멜로디 라인 + 영상 + 가사 하이라이팅)
 
-<video src="attach/melodic-karaoke.mp4" width="320" height="240" controls></video>
+[영상 보기](attach/melodic-karaoke.mp4)
 
 ## 기술 스택
 
