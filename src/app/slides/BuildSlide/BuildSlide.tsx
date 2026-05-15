@@ -1,8 +1,7 @@
 import { Screen } from "@/app/components/Screen"
-import { AudioManager } from "@/AudioManager"
 import { Article } from "@/data-struct/Article"
 import { SyncInfo } from "@/SyncInfo"
-import { useEffect, useRef } from "react"
+import { useRef } from "react"
 
 type BuildSlideProps = {
     message:string,

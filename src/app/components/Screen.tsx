@@ -2,7 +2,7 @@ import { AudioManager } from "@/AudioManager";
 import { Article } from "@/data-struct/Article";
 import { SyncInfo } from "@/SyncInfo.js";
 import { frequencyToNoteName, lineSentenceWidth } from "@/utils";
-import React, { ChangeEvent, RefObject, useEffect, useMemo, useRef, useState } from "react";
+import React, { RefObject, useEffect, useRef, useState } from "react";
 
 type ScreenProps = {
     isRunningMode:boolean,

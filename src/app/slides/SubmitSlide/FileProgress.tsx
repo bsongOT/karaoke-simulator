@@ -3,7 +3,7 @@ import { getAudioContext } from "@/context";
 import { Article } from "@/data-struct/Article";
 import { SyncInfo } from "@/SyncInfo";
 import { Product } from "@/types";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 
 type FileProgressProps = {
     submit: (p: Product, sd: Article<SyncInfo>) => void,

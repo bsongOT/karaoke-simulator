@@ -3,7 +3,7 @@ import { context, getGain } from "@/context";
 import { useRef, useState } from "react";
 
 export function VolumeController(props:{audio:AudioManager | null, mrStatus:"ready" | "pending" | "error", melodyStatus:"ready" | "pending"}) {
-    const {audio, mrStatus, melodyStatus} = props;
+    const {audio, mrStatus } = props;
 
     return (
         <div>

@@ -12,7 +12,6 @@ import { BuildSlide } from "./slides/BuildSlide/BuildSlide";
 import { LyricSearcher } from "./components/LyricSearcher";
 import { AudioManager } from "@/AudioManager";
 import { MainSlide } from "./slides/MainSlide/MainSlide";
-import { KeyboardManager } from "@/Facades/KeyboardManager";
 import { useKeys } from "@/custom-hooks";
 
 export default function Home() {
